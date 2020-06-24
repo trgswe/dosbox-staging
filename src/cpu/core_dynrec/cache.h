@@ -614,11 +614,13 @@ static void cache_block_closing(Bit8u* block_start,Bitu block_size);
 
 static bool cache_initialized = false;
 
-static void cache_init(bool enable) {
+static uint8_t *cache_init(bool enable)
+{
 	Bits i;
 	if (enable) {
 		// see if cache is already initialized
-		if (cache_initialized) return;
+		if (cache_initialized)
+			return nullptr;
 		cache_initialized = true;
 		if (cache_blocks == NULL) {
 			// allocate the cache blocks memory
@@ -663,29 +665,6 @@ static void cache_init(bool enable) {
 			block->cache.size=CACHE_TOTAL;
 			block->cache.next=0;						// last block in the list
 		}
-		// setup the default blocks for block linkage returns
-		cache.pos=&cache_code_link_blocks[0];
-		core_dynrec.runcode=(BlockReturn (*)(Bit8u*))cache.pos;
-		// can use op to PAGESIZE_TEMP-64 bytes
-		dyn_run_code();
-		cache_block_before_close();
-		cache_block_closing(cache_code_link_blocks, cache.pos-cache_code_link_blocks);
-
-		cache.pos=&cache_code_link_blocks[PAGESIZE_TEMP-64];
-		link_blocks[0].cache.start=cache.pos;
-		// link code that returns with a special return code
-		// must be less than 32 bytes
-		dyn_return(BR_Link1,false);
-		cache_block_before_close();
-		cache_block_closing(link_blocks[0].cache.start, cache.pos-link_blocks[0].cache.start);
-
-		cache.pos=&cache_code_link_blocks[PAGESIZE_TEMP-32];
-		link_blocks[1].cache.start=cache.pos;
-		// link code that returns with a special return code
-		// must be less than 32 bytes
-		dyn_return(BR_Link2,false);
-		cache_block_before_close();
-		cache_block_closing(link_blocks[1].cache.start, cache.pos-link_blocks[1].cache.start);
 
 		cache.free_pages=0;
 		cache.last_page=0;
@@ -696,7 +675,11 @@ static void cache_init(bool enable) {
 			newpage->next=cache.free_pages;
 			cache.free_pages=newpage;
 		}
+
+		return cache_code_link_blocks;
 	}
+
+	return nullptr;
 }
 
 static void cache_close(void) {

@@ -354,9 +354,39 @@ Bits CPU_Core_Dynrec_Trap_Run(void) {
 void CPU_Core_Dynrec_Init(void) {
 }
 
-void CPU_Core_Dynrec_Cache_Init(bool enable_cache) {
+void CPU_Core_Dynrec_Cache_Init(bool enable_cache)
+{
 	// Initialize code cache and dynamic blocks
-	cache_init(enable_cache);
+	uint8_t *pos = cache_init(enable_cache);
+	if (!pos)
+		return;
+
+	// setup the default blocks for block linkage returns
+	cache.pos = pos;
+	core_dynrec.runcode = (BlockReturn(*)(Bit8u *))cache.pos;
+	// can use op to PAGESIZE_TEMP-64 bytes
+	dyn_run_code();
+	cache_block_before_close();
+	cache_block_closing(cache_code_link_blocks,
+	                    cache.pos - cache_code_link_blocks);
+
+	cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 64];
+	link_blocks[0].cache.start = cache.pos;
+	// link code that returns with a special return code
+	// must be less than 32 bytes
+	dyn_return(BR_Link1, false);
+	cache_block_before_close();
+	cache_block_closing(link_blocks[0].cache.start,
+	                    cache.pos - link_blocks[0].cache.start);
+
+	cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 32];
+	link_blocks[1].cache.start = cache.pos;
+	// link code that returns with a special return code
+	// must be less than 32 bytes
+	dyn_return(BR_Link2, false);
+	cache_block_before_close();
+	cache_block_closing(link_blocks[1].cache.start,
+	                    cache.pos - link_blocks[1].cache.start);
 }
 
 void CPU_Core_Dynrec_Cache_Close(void) {
