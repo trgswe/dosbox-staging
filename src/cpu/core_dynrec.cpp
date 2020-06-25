@@ -62,9 +62,12 @@
 #define DYN_PAGE_HASH	(4096>>DYN_HASH_SHIFT)
 #define DYN_LINKS		(16)
 
-
 //#define DYN_LOG 1 //Turn Logging on.
 
+// identificator to signal self-modification of the currently executed block
+#define SMC_CURRENT_BLOCK 0xffff
+
+#include "cache.h"
 
 #if C_FPU
 #define CPU_FPU 1                                               //Enable FPU escape instructions
@@ -116,9 +119,6 @@ enum BlockReturn {
 	BR_SMCBlock
 };
 
-// identificator to signal self-modification of the currently executed block
-#define SMC_CURRENT_BLOCK	0xffff
-
 
 static void IllegalOptionDynrec(const char* msg) {
 	E_Exit("DynrecCore: illegal option in %s",msg);
@@ -147,8 +147,6 @@ static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint16_t) == 0,
               "core_dynrec.readdata must be word aligned");
 static_assert(offsetof(core_dynrec_t, readdata) % sizeof(uint32_t) == 0,
               "core_dynrec.readdata must be double-word aligned");
-
-#include "core_dynrec/cache.h"
 
 #define X86			0x01
 #define X86_64		0x02

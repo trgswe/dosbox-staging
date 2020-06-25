@@ -62,11 +62,17 @@
 
 //#define DYN_LOG 1 //Turn logging on
 
+// identificator to signal self-modification of the currently executed block
+#define SMC_CURRENT_BLOCK 0xffff
+
+#include "cache.h" 
 
 #if C_FPU
 #define CPU_FPU 1                                               //Enable FPU escape instructions
 #define X86_DYNFPU_DH_ENABLED
 #endif
+
+
 
 enum {
 	G_EAX,G_ECX,G_EDX,G_EBX,
@@ -122,9 +128,6 @@ enum BlockReturn {
 	BR_SMCBlock
 };
 
-#define SMC_CURRENT_BLOCK	0xffff
-
-
 #define DYNFLG_HAS16		0x1		//Would like 8-bit host reg support
 #define DYNFLG_HAS8			0x2		//Would like 16-bit host reg support
 #define DYNFLG_LOAD			0x4		//Load value when accessed
@@ -159,8 +162,6 @@ static struct {
 } extra_regs;
 
 #define IllegalOption(msg) E_Exit("DYNX86: illegal option in " msg)
-
-#include "core_dyn_x86/cache.h" 
 
 static struct {
 	Bitu callback;
