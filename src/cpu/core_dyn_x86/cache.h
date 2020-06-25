@@ -537,10 +537,13 @@ static void gen_return(BlockReturn retcode);
 
 static bool cache_initialized = false;
 
-static void cache_init(bool enable) {
+static uint8_t *cache_init(bool enable)
+{
 	Bits i;
 	if (enable) {
-		if (cache_initialized) return;
+		// see if cache is already initialized
+		if (cache_initialized)
+			return nullptr;
 		cache_initialized = true;
 		if (cache_blocks == NULL) {
 			cache_blocks=(CacheBlock*)malloc(CACHE_BLOCKS*sizeof(CacheBlock));
@@ -580,13 +583,7 @@ static void cache_init(bool enable) {
 			block->cache.size=CACHE_TOTAL;
 			block->cache.next=0;								//Last block in the list
 		}
-		/* Setup the default blocks for block linkage returns */
-		cache.pos=&cache_code_link_blocks[0];
-		link_blocks[0].cache.start=cache.pos;
-		gen_return(BR_Link1);
-		cache.pos=&cache_code_link_blocks[32];
-		link_blocks[1].cache.start=cache.pos;
-		gen_return(BR_Link2);
+
 		cache.free_pages=0;
 		cache.last_page=0;
 		cache.used_pages=0;
@@ -596,7 +593,11 @@ static void cache_init(bool enable) {
 			newpage->next=cache.free_pages;
 			cache.free_pages=newpage;
 		}
+
+		return cache_code_link_blocks;
 	}
+
+	return nullptr;
 }
 
 static void cache_close(void) {
