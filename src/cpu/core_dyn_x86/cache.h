@@ -499,8 +499,9 @@ static void cache_closeblock(void) {
 		}
 	}
 	/* Advance the active block pointer */
-	if (!block->cache.next) {
-//		LOG_MSG("Cache full restarting");
+	if (!block->cache.next ||
+	    (block->cache.next->cache.start > (cache_code_start_ptr + CACHE_TOTAL - CACHE_MAXSIZE))) {
+		LOG_MSG("CPU: dyn_x86 cache full, restarting"); // TODO comment-out
 		cache.block.active=cache.block.first;
 	} else {
 		cache.block.active=block->cache.next;
