@@ -526,8 +526,6 @@ static INLINE void cache_addq(Bit64u val) {
 	cache.pos+=8;
 }
 
-static void gen_return(BlockReturn retcode);
-
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
 #define PAGESIZE_TEMP PAGESIZE

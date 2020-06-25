@@ -598,13 +598,6 @@ static INLINE void cache_addq(Bit64u val) {
 	cache.pos+=8;
 }
 
-
-static void dyn_return(BlockReturn retcode,bool ret_exception);
-static void dyn_run_code(void);
-static void cache_block_before_close(void);
-static void cache_block_closing(Bit8u* block_start,Bitu block_size);
-
-
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
 #define PAGESIZE_TEMP PAGESIZE
