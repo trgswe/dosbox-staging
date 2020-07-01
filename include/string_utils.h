@@ -24,7 +24,9 @@
 #include <cstdio>
 #include <cstring>
 
+#ifndef _MSC_VER
 #include <strings.h>
+#endif
 
 /* Compare two C strings ignoring case
  *
