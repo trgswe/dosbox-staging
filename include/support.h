@@ -33,10 +33,7 @@
 
 #include <SDL.h>
 
-#ifdef _MSC_VER
-#define strcasecmp(a, b) _stricmp(a, b)
-#define strncasecmp(a, b, n) _strnicmp(a, b, n)
-#endif
+#include "string_utils.h"
 
 /*
  *  Converts a string to a finite number (such as float or double).
@@ -93,35 +90,6 @@ inline int iround(double x) {
 #define assertm(exp, msg) assert(((void)msg, exp))
 // Use (void) to silent unused warnings.
 // https://en.cppreference.com/w/cpp/error/assert
-
-/// Copy a string into C array
-///
-/// This function copies string pointed by src to fixed-size buffer dst.
-/// At most N bytes from src are copied, where N is size of dst.
-/// If exactly N bytes are copied, then terminating null byte is put
-/// into buffer, thus buffer overrun is prevented.
-///
-/// Function returns pointer to buffer to be compatible with std::strcpy.
-///
-/// Usage:
-///
-///     char buffer[2];
-///     safe_strcpy(buffer, "abc");
-///     // buffer is filled with "a"
-
-template<size_t N>
-char * safe_strcpy(char (& dst)[N], const char * src) noexcept {
-	snprintf(dst, N, "%s", src);
-	return & dst[0];
-}
-
-template<size_t N>
-char * safe_strcat(char (& dst)[N], const char * src) noexcept {
-	strncat(dst, src, N - strnlen(dst, N) - 1);
-	return & dst[0];
-}
-
-#define safe_strncpy(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
 
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
