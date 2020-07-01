@@ -55,7 +55,11 @@
 template <size_t N>
 char *safe_strcpy(char (&dst)[N], const char *src) noexcept
 {
+#ifdef _MSC_VER
+	strcpy_s(dst, src);
+#else
 	snprintf(dst, N, "%s", src);
+#endif
 	return &dst[0];
 }
 
@@ -71,8 +75,12 @@ char *safe_strcpy(char (&dst)[N], const char *src) noexcept
 
 inline char *safe_strncpy(char *dst, const char *src, size_t n) noexcept
 {
+#ifdef _MSC_VER
+	strcpy_s(dst, n, src); // MSVC doc is unclear; should it be n or n-1?
+#else
 	strncpy(dst, src, n - 1);
 	dst[n - 1] = '\0';
+#endif
 	return dst;
 }
 
@@ -85,7 +93,11 @@ inline char *safe_strncpy(char *dst, const char *src, size_t n) noexcept
 template <size_t N>
 char *safe_strcat(char (&dst)[N], const char *src) noexcept
 {
+#ifdef _MSC_VER
+	strcat(dst, N, src);
+#else
 	strncat(dst, src, N - strnlen(dst, N) - 1);
+#endif
 	return &dst[0];
 }
 
