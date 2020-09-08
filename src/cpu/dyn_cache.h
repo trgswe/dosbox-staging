@@ -652,10 +652,6 @@ static inline void cache_addq(uint64_t val)
 	cache.pos += sizeof(uint64_t);
 }
 
-#if (C_DYNAMIC_X86)
-static void gen_return(BlockReturn retcode);
-#endif
-
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
 #if (C_HAVE_MPROTECT)
 #define PAGESIZE_TEMP PAGESIZE
@@ -724,15 +720,6 @@ static uint8_t *cache_init(bool enable)
 			block->cache.size=CACHE_TOTAL;
 			block->cache.next = 0; // last block in the list
 		}
-#if (C_DYNAMIC_X86)
-		// setup the default blocks for block linkage returns
-		cache.pos=&cache_code_link_blocks[0];
-		link_blocks[0].cache.start=cache.pos;
-		gen_return(BR_Link1);
-		cache.pos=&cache_code_link_blocks[32];
-		link_blocks[1].cache.start=cache.pos;
-		gen_return(BR_Link2);
-#endif
 
 		cache.free_pages=0;
 		cache.last_page=0;

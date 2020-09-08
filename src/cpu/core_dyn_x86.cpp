@@ -28,11 +28,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#if defined (WIN32)
-#include <windows.h>
-#include <winbase.h>
-#endif
-
 #if (C_HAVE_MPROTECT)
 #include <sys/mman.h>
 
@@ -460,9 +455,19 @@ void CPU_Core_Dyn_X86_Init(void) {
 	return;
 }
 
-void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache) {
-	/* Initialize code cache and dynamic blocks */
-	cache_init(enable_cache);
+void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache)
+{
+	/* Initialize code cache */
+	uint8_t *pos = cache_init(enable_cache);
+	if (pos) {
+		cache.pos = pos;
+		/* Setup the default blocks for block linkage returns */
+		link_blocks[0].cache.start = cache.pos;
+		gen_return(BR_Link1);
+		cache.pos=&cache_code_link_blocks[32];
+		link_blocks[1].cache.start = cache.pos;
+		gen_return(BR_Link2);
+	}
 }
 
 void CPU_Core_Dyn_X86_Cache_Close(void) {
