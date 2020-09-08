@@ -724,32 +724,7 @@ static uint8_t *cache_init(bool enable) // TODO make it const (alongside cache.p
 #if (C_DYNAMIC_X86)
 		// moved to core_dyn_x86
 #elif (C_DYNREC)
-		// setup the default blocks for block linkage returns
-		cache.pos=&cache_code_link_blocks[0];
-		core_dynrec.runcode = (BlockReturn(*)(uint8_t *))cache.pos;
-		// can use op to PAGESIZE_TEMP-64 bytes
-		dyn_run_code();
-		cache_block_before_close();
-		cache_block_closing(cache_code_link_blocks,
-		                    cache.pos - cache_code_link_blocks);
-
-		cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 64];
-		link_blocks[0].cache.start = cache.pos;
-		// link code that returns with a special return code
-		// must be less than 32 bytes
-		dyn_return(BR_Link1, false);
-		cache_block_before_close();
-		cache_block_closing(link_blocks[0].cache.start,
-		                    cache.pos - link_blocks[0].cache.start);
-
-		cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 32];
-		link_blocks[1].cache.start = cache.pos;
-		// link code that returns with a special return code
-		// must be less than 32 bytes
-		dyn_return(BR_Link2, false);
-		cache_block_before_close();
-		cache_block_closing(link_blocks[1].cache.start,
-		                    cache.pos - link_blocks[1].cache.start);
+		// moved to core_dynrec
 #endif
 
 		cache.free_pages=0;
