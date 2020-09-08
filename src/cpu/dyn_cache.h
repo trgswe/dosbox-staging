@@ -663,11 +663,13 @@ static void cache_block_closing(uint8_t *block_start, Bitu block_size);
 
 static bool cache_initialized = false;
 
-static void cache_init(bool enable) {
+static uint8_t *cache_init(bool enable) // TODO make it const (alongside cache.pos)
+{
 	Bits i;
 	if (enable) {
 		// see if cache is already initialized
-		if (cache_initialized) return;
+		if (cache_initialized)
+			return nullptr;
 		cache_initialized = true;
 		if (cache_blocks == NULL) {
 			// allocate the cache blocks memory
@@ -719,15 +721,11 @@ static void cache_init(bool enable) {
 			block->cache.size=CACHE_TOTAL;
 			block->cache.next = 0; // last block in the list
 		}
+#if (C_DYNAMIC_X86)
+		// moved to core_dyn_x86
+#elif (C_DYNREC)
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
-#if (C_DYNAMIC_X86)
-		link_blocks[0].cache.start=cache.pos;
-		gen_return(BR_Link1);
-		cache.pos=&cache_code_link_blocks[32];
-		link_blocks[1].cache.start=cache.pos;
-		gen_return(BR_Link2);
-#elif (C_DYNREC)
 		core_dynrec.runcode = (BlockReturn(*)(uint8_t *))cache.pos;
 		// can use op to PAGESIZE_TEMP-64 bytes
 		dyn_run_code();
@@ -763,7 +761,11 @@ static void cache_init(bool enable) {
 			newpage->next=cache.free_pages;
 			cache.free_pages=newpage;
 		}
+
+		return cache_code_link_blocks;
 	}
+
+	return nullptr;
 }
 
 static void cache_close(void) {
