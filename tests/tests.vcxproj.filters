@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="support.cpp" />
-    <ClCompile Include="test.cpp" />
     <ClCompile Include="example.cpp" />
     <ClCompile Include="..\src\misc\support.cpp">
       <Filter>src\misc</Filter>
