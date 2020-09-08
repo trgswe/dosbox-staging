@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="support.cpp" />
+    <ClCompile Include="test.cpp" />
+    <ClCompile Include="example.cpp" />
+    <ClCompile Include="..\src\misc\support.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{59acc453-db3a-40d1-872b-05460a221117}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\misc">
+      <UniqueIdentifier>{cd41c519-0ee2-43e9-93c7-23bdb731b217}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
