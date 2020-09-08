@@ -19,8 +19,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dosbox.h"
+
 #include <cassert>
 #include <new>
+
+#if defined (WIN32)
+#include <windows.h>
+#include <winbase.h>
+#endif
 
 #include "mem_unaligned.h"
 #include "paging.h"
@@ -647,11 +654,6 @@ static inline void cache_addq(uint64_t val)
 
 #if (C_DYNAMIC_X86)
 static void gen_return(BlockReturn retcode);
-#elif (C_DYNREC)
-static void dyn_return(BlockReturn retcode, bool ret_exception);
-static void dyn_run_code();
-static void cache_block_before_close();
-static void cache_block_closing(uint8_t *block_start, Bitu block_size);
 #endif
 
 /* Define temporary pagesize so the MPROTECT case and the regular case share as much code as possible */
@@ -663,12 +665,15 @@ static void cache_block_closing(uint8_t *block_start, Bitu block_size);
 
 static bool cache_initialized = false;
 
-static void cache_init(bool enable) {
+static uint8_t *cache_init(bool enable)
+{
 	Bits i;
 	if (enable) {
 		// see if cache is already initialized
-		if (cache_initialized) return;
+		if (cache_initialized)
+			return nullptr;
 		cache_initialized = true;
+
 		if (cache_blocks == NULL) {
 			// allocate the cache blocks memory
 			cache_blocks = (CacheBlock *)malloc(CACHE_BLOCKS *
@@ -719,39 +724,14 @@ static void cache_init(bool enable) {
 			block->cache.size=CACHE_TOTAL;
 			block->cache.next = 0; // last block in the list
 		}
+#if (C_DYNAMIC_X86)
 		// setup the default blocks for block linkage returns
 		cache.pos=&cache_code_link_blocks[0];
-#if (C_DYNAMIC_X86)
 		link_blocks[0].cache.start=cache.pos;
 		gen_return(BR_Link1);
 		cache.pos=&cache_code_link_blocks[32];
 		link_blocks[1].cache.start=cache.pos;
 		gen_return(BR_Link2);
-#elif (C_DYNREC)
-		core_dynrec.runcode = (BlockReturn(*)(uint8_t *))cache.pos;
-		// can use op to PAGESIZE_TEMP-64 bytes
-		dyn_run_code();
-		cache_block_before_close();
-		cache_block_closing(cache_code_link_blocks,
-		                    cache.pos - cache_code_link_blocks);
-
-		cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 64];
-		link_blocks[0].cache.start = cache.pos;
-		// link code that returns with a special return code
-		// must be less than 32 bytes
-		dyn_return(BR_Link1, false);
-		cache_block_before_close();
-		cache_block_closing(link_blocks[0].cache.start,
-		                    cache.pos - link_blocks[0].cache.start);
-
-		cache.pos = &cache_code_link_blocks[PAGESIZE_TEMP - 32];
-		link_blocks[1].cache.start = cache.pos;
-		// link code that returns with a special return code
-		// must be less than 32 bytes
-		dyn_return(BR_Link2, false);
-		cache_block_before_close();
-		cache_block_closing(link_blocks[1].cache.start,
-		                    cache.pos - link_blocks[1].cache.start);
 #endif
 
 		cache.free_pages=0;
@@ -763,7 +743,10 @@ static void cache_init(bool enable) {
 			newpage->next=cache.free_pages;
 			cache.free_pages=newpage;
 		}
+
+		return cache_code_link_blocks;
 	}
+	return nullptr;
 }
 
 static void cache_close(void) {
