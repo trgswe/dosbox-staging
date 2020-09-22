@@ -75,4 +75,6 @@ extern bool mono_cga;
 #include "logging.h"
 #endif // the logging system.
 
+int sdl_main(int argc, char* argv[]);
+
 #endif /* DOSBOX_DOSBOX_H */
