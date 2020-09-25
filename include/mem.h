@@ -33,6 +33,8 @@ typedef Bit32s MemHandle;
 
 #define MEM_PAGESIZE 4096
 
+void MEM_Init(Section *);
+
 extern HostPt MemBase;
 HostPt GetMemBase(void);
 

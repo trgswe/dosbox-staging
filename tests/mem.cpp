@@ -19,13 +19,40 @@
  */
 
 #include "mem.h"
-#include "dos_inc.h"
 
 #include <gtest/gtest.h>
 
+#include "control.h"
+#include "paging.h"
+#include "setup.h"
+
 namespace {
 
-TEST(Mem_RealRW_B, NominalLow)
+static void DOSBOX_FakeInit(Section *sec)
+{}
+
+class MemoryAccessTest : ::testing::Test {
+protected:
+	MemoryAccessTest()
+	{
+		Section_prop *secprop;
+		secprop = control->AddSection_prop("dosbox", &DOSBOX_FakeInit);
+		secprop->AddInitFunction(&PAGING_Init); // done
+		secprop->AddInitFunction(&MEM_Init); // done
+		Prop_int* pint;
+		pint = secprop->Add_int("memsize",
+		                        Property::Changeable::WhenIdle, 16);
+		pint->SetMinMax(1, 63);
+		//PAGING_InitTLB();
+		//PAGING_Enable(true);
+		//PAGING_ForcePageInit();
+		//MEM_Init();
+	}
+
+	~MemoryAccessTest() {}
+};
+
+TEST(MemoryAccessTest, ReadWriteByte_NominalLow)
 {
 	const uint16_t seg = 64;
 	const uint16_t off = 64;
@@ -40,163 +67,6 @@ TEST(Mem_RealRW_B, NominalLow)
 	EXPECT_EQ(current, val);
 
 	EXPECT_EQ(original, current);
-}
-
-TEST(Mem_RealRW_B, NominalMid)
-{
-	const uint16_t seg = 500;
-	const uint16_t off = 500;
-	const uint8_t val = 32;
-	mem_writeb((seg << 4) + off, val);
-
-	const auto original = mem_readb((seg << 4) + off);
-	EXPECT_EQ(original, val);
-
-	real_writeb(seg, off, val);
-	const auto current = real_readb(seg, off);
-	EXPECT_EQ(current, val);
-
-	EXPECT_EQ(original, current);
-}
-
-TEST(Mem_RealRW_B, NominalLarge)
-{
-	const uint16_t seg = 1000;
-	const uint16_t off = 1000;
-	const uint8_t val = 128;
-	mem_writeb((seg << 4) + off, val);
-
-	const auto original = mem_readb((seg<<4)+off);
-	EXPECT_EQ(original, val);
-
-	real_writeb(seg, off, val);
-	const auto current = real_readb(seg, off);
-	EXPECT_EQ(current, val);
-
-	EXPECT_EQ(original, current);
-}
-
-TEST(Mem_RealRW_B, IllegalWrap)
-{
-	const uint16_t seg = 2000;
-	const uint16_t off = 2000;
-	EXPECT_DEBUG_DEATH({ real_readb(seg, off); }, "");
-}
-
-TEST(Mem_RealRW_W, NominalLow)
-{
-	const uint16_t seg = 64;
-	const uint16_t off = 64;
-	const uint16_t val = 16;
-	mem_writew((seg << 4) + off, val);
-
-	const auto original = mem_readw((seg << 4) + off);
-	EXPECT_EQ(original, val);
-
-	real_writew(seg, off, val);
-	const auto current = real_readw(seg, off);
-	EXPECT_EQ(current, val);
-
-	EXPECT_EQ(original, current);
-}
-
-TEST(Mem_RealRW_W, NominalMid)
-{
-	const uint16_t seg = 500;
-	const uint16_t off = 500;
-	const uint16_t val = 500;
-
-	mem_writew((seg << 4) + off, val);
-	const auto original = mem_readw((seg << 4) + off);
-	EXPECT_EQ(original, val);
-
-	real_writew(seg, off, val);
-	const auto current = real_readw(seg, off);
-	EXPECT_EQ(current, val);
-
-	EXPECT_EQ(original, current);
-}
-
-TEST(Mem_RealRW_W, NominalLarge)
-{
-	const uint16_t seg = 1000;
-	const uint16_t off = 1000;
-	const uint16_t val = 16000;
-	mem_writew((seg << 4) + off, val);
-
-	const auto original = mem_readw((seg << 4) + off);
-	EXPECT_EQ(original, val);
-
-	real_writew(seg, off, val);
-	const auto current = real_readw(seg, off);
-	EXPECT_EQ(current, val);
-
-	EXPECT_EQ(original, current);
-}
-
-TEST(Mem_RealRW_W, IllegalWrap)
-{
-	const uint16_t seg = 2000;
-	const uint16_t off = 2000;
-	EXPECT_DEBUG_DEATH({ real_readw(seg, off); }, "");
-}
-
-TEST(Mem_RealRW_D, NominalLow)
-{
-	const uint16_t seg = 64;
-	const uint16_t off = 64;
-	const uint32_t val = 16;
-	mem_writed((seg << 4) + off, val);
-
-	const auto original = mem_readd((seg << 4) + off);
-	EXPECT_EQ(original, val);
-
-	real_writed(seg, off, val);
-	const auto current = real_readd(seg, off);
-	EXPECT_EQ(current, val);
-
-	EXPECT_EQ(original, current);
-}
-
-TEST(Mem_RealRW_D, NominalMid)
-{
-	const uint16_t seg = 500;
-	const uint16_t off = 500;
-	const uint32_t val = 300000;
-	mem_writed((seg << 4) + off, val);
-
-	const auto original = mem_readd((seg << 4) + off);
-	EXPECT_EQ(original, val);
-
-	real_writed(seg, off, val);
-	const auto current = real_readd(seg, off);
-	EXPECT_EQ(current, val);
-
-	EXPECT_EQ(original, current);
-}
-
-TEST(Mem_RealRW_D, NominalLarge)
-{
-	const uint16_t seg = 1000;
-	const uint16_t off = 1000;
-	const uint32_t val = 5000000;
-	mem_writed((seg << 4) + off, val);
-
-	const auto original = mem_readd((seg << 4) + off);
-	EXPECT_EQ(original, val);
-
-	real_writed(seg, off, val);
-	const auto current = real_readd(seg, off);
-	EXPECT_EQ(current, val);
-
-	EXPECT_EQ(original, current);
-}
-
-TEST(Mem_RealRW_D, IllegalWrap)
-{
-	const uint16_t seg = 2000;
-	const uint16_t off = 2000;
-	EXPECT_DEBUG_DEATH({ real_readb(seg, off); }, "");
 }
 
 } // namespace

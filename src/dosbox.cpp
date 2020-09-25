@@ -16,34 +16,36 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dosbox.h"
 
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include "dosbox.h"
-#include "debug.h"
-#include "cpu.h"
-#include "video.h"
-#include "pic.h"
-#include "cpu.h"
+
 #include "callback.h"
-#include "inout.h"
-#include "mixer.h"
-#include "timer.h"
-#include "dos_inc.h"
-#include "setup.h"
 #include "control.h"
+#include "cpu.h"
 #include "cross.h"
-#include "programs.h"
-#include "support.h"
-#include "mapper.h"
-#include "ints/int10.h"
-#include "render.h"
-#include "pci_bus.h"
-#include "midi.h"
+#include "debug.h"
+#include "dos_inc.h"
 #include "hardware.h"
+#include "inout.h"
+#include "ints/int10.h"
+#include "mapper.h"
+#include "mem.h"
+#include "midi.h"
+#include "mixer.h"
+#include "paging.h"
+#include "pci_bus.h"
+#include "pic.h"
+#include "programs.h"
+#include "render.h"
+#include "setup.h"
+#include "support.h"
+#include "timer.h"
+#include "video.h"
 
 Config * control;
 MachineType machine;
@@ -52,8 +54,6 @@ SVGACards svgaCard;
 /* The whole load of startups for all the subfunctions */
 void MSG_Init(Section_prop *);
 void LOG_StartUp(void);
-void MEM_Init(Section *);
-void PAGING_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);
 void PROGRAMS_Init(Section*);

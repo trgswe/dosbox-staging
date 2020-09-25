@@ -78,6 +78,7 @@ public:
 };
 
 /* Some other functions */
+void PAGING_Init(Section *);
 void PAGING_Enable(bool enabled);
 bool PAGING_Enabled(void);
 
