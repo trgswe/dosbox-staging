@@ -57,19 +57,62 @@ TEST(SafeStrcpy, StringLongerThanBuffer)
 	EXPECT_STREQ("1234", safe_strcpy(buffer, long_input));
 }
 
-TEST(SafeStrcpyDeathTest, PassNull)
+TEST(SafeStrcpy_DeathTest, PassNull)
 {
 	char buf[] = "12345678";
 	EXPECT_DEBUG_DEATH({ safe_strcpy(buf, nullptr); }, "");
 }
 
-TEST(SafeStrcpyDeathTest, ProtectFromCopyingOverlappingString)
+TEST(SafeStrcpy_DeathTest, ProtectFromCopyingOverlappingString)
 {
 	char buf[] = "12345678";
 	char *overlapping = &buf[2];
 	ASSERT_LE(buf, overlapping);
 	ASSERT_LE(overlapping, buf + ARRAY_LEN(buf));
 	EXPECT_DEBUG_DEATH({ safe_strcpy(buf, overlapping); }, "");
+}
+
+TEST(SafeStrcpy_4, SimpleCopy)
+{
+	char buffer[10] = "123456789";
+	char *ret_value = safe_strcpy(buffer, 10, "abc", strlen("abc"));
+	EXPECT_EQ(ret_value, &buffer[0]);
+	EXPECT_STREQ("abc", buffer);
+}
+
+TEST(SafeStrcpy_4, StringLongerThanBuffer)
+{
+	char buffer[4] = "";
+	char long_input[] = "1234567890";
+	const size_t buf_len = ARRAY_LEN(buffer);
+	const size_t str_len = strlen(long_input);
+	ASSERT_LT(buf_len, str_len);
+	EXPECT_STREQ("123", safe_strcpy(buffer, buf_len, long_input, str_len));
+}
+
+TEST(SafeStrcpy_4, EmptyStringOverwrites)
+{
+	char buffer[4] = "abc";
+	EXPECT_STREQ("", safe_strcpy(buffer, 4, "", 0));
+}
+
+TEST(SafeStrcpy_4, CopyToNonArray)
+{
+	auto *buffer = new char[4];
+	std::string str = "abc";
+	ASSERT_EQ(3, str.size());
+	EXPECT_STREQ("abc", safe_strcpy(buffer, 4, str.c_str(), str.size()));
+	delete [] buffer;
+}
+
+TEST(SafeStrcpy_4, CopyPrefixOfLongerString)
+{
+	char buffer[4] = "";
+	char long_input[] = "abc";
+	const size_t buf_len = ARRAY_LEN(buffer);
+	const size_t to_copy = 2;
+	ASSERT_LT(to_copy, strlen(long_input));
+	EXPECT_STREQ("ab", safe_strcpy(buffer, buf_len, long_input, to_copy));
 }
 
 } // namespace

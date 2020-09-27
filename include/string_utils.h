@@ -57,4 +57,26 @@ char *safe_strcpy(char (&dst)[N], const char *src) noexcept
 	return &dst[0];
 }
 
+/* Copy a number of characters into a buffer
+ *
+ * This function copies n first characters out of src to dst, and then appends a
+ * terminating null byte.  If dst_size is not big enough to store the resulting
+ * string, then trimming occurs to avoid buffer overflow.
+ *
+ * Usage:
+ *
+ *     char buffer[4];
+ *
+ *     safe_strcpy(buffer, 4, "abc", 2);
+ *     // buffer contains "ab"
+ *
+ *     safe_strcpy(buffer, 4, "abc", strlen("abc"));
+ *     // buffer contains "abc"
+ *
+ *     safe_strcpy(buffer, 4, "abcd", strlen("abcd"));
+ *     // buffer contains "abc"
+ *
+ */
+char *safe_strcpy(char *dst, size_t dst_size, const char *src, size_t n) noexcept;
+
 #endif
