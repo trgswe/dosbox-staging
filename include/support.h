@@ -32,6 +32,10 @@
 #include <string.h>
 #include <string>
 
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+
 #include <SDL.h>
 
 #include "string_utils.h"
@@ -112,12 +116,6 @@ char * safe_strcat(char (& dst)[N], const char * src) noexcept {
 	strncat(dst, src, N - strnlen(dst, N) - 1);
 	return & dst[0];
 }
-
-#define safe_strncpy(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
-
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 
 // Clamp: given a value that can be compared with the given minimum and maximum
 //        values, this function will:

@@ -79,4 +79,27 @@ char *safe_strcpy(char (&dst)[N], const char *src) noexcept
  */
 char *safe_strcpy(char *dst, size_t dst_size, const char *src, size_t n) noexcept;
 
+/* safe_strncpy macro is "somewhat safer" semi-replacement for strncpy.
+ * It prevents buffer overflow and ensure dst buffer is null-terminated
+ * (but only if user passes the 3rd parameter correctly).
+ *
+ * Use safe_strcpy or std::string assignment instead of this macro whenever
+ * possible.
+ *
+ * BEWARE: Sometimes user might want to pass count of characters to copy
+ * as 3rd parameter (because that's how strncpy is normally used), but
+ * this will result in overwriting the last copied character (hence len(src)+1
+ * characters need to be copied, when strncpy call would work with len(src)).
+ *
+ * This macro is kept for compatibility with new code arriving from upstream.
+ */
+#define safe_strncpy(dst, src, dst_size) \
+	do { \
+		static_assert(!std::is_array<decltype(dst)>::value, \
+		              "dst is an array with size known at compile time; " \
+		              "use safe_strcpy(dst, src) instead"); \
+		strncpy((dst), (src), (dst_size)-1); \
+		(dst)[(dst_size)-1] = '\0'; \
+	} while (0)
+
 #endif
