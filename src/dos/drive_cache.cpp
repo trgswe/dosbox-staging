@@ -325,9 +325,9 @@ void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir) {
 		const char* pos = strrchr(path,CROSS_FILESPLIT);
 		if (pos)
 			len = (Bit32s)(pos - path);
-		if (len>0) {
-			safe_strncpy(tmp,path,len+1);
-		} else	{
+		if (len > 0) {
+			safe_strcpy(tmp, CROSS_LEN, path, len);
+		} else {
 			safe_strcpy(tmp, path);
 		}
 		dir = FindDirInfo(tmp,expand);
@@ -620,10 +620,8 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 		else
 			tocopy = len;
 
-		// Copy the lesser of "DOS_NAMELENGTH_ASCII" or "tocopy + 1" characters.
-		safe_strncpy(info->shortname, tmpName,
-		             tocopy < DOS_NAMELENGTH_ASCII ? tocopy + 1 : DOS_NAMELENGTH_ASCII);
-		// Copy number
+		// Format the name as "name~N.ext"
+		safe_strcpy(info->shortname, sizeof(info->shortname), tmpName, tocopy);
 		safe_strcat(info->shortname, "~");
 		safe_strcat(info->shortname, short_nr);
 
@@ -669,8 +667,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char* expandedPath) {
 	// statics
 	static char	split[2] = { CROSS_FILESPLIT,0 };
-	
-	char		dir  [CROSS_LEN]; 
+
 	char		work [CROSS_LEN];
 	const char*	start = path;
 	const char*		pos;
@@ -704,15 +701,18 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 		};
 	};
 
+	char dir[CROSS_LEN];
 	do {
 		pos = strchr(start,CROSS_FILESPLIT);
 		if (pos) {
-			safe_strncpy(dir, start,
-			             static_cast<unsigned int>(pos - start) < sizeof(dir) ? pos - start + 1 : sizeof(dir));
-		}
-		else {
+			//safe_strncpy(dir, start,
+			//             static_cast<unsigned int>(pos - start) < sizeof(dir) ? pos - start + 1 : sizeof(dir));
+			const size_t len = (pos - start);
+			safe_strcpy(dir, CROSS_LEN, start, len);
+			// TODO test me
+		} else {
 			safe_strcpy(dir, start);
-		};
+		}
  
 		// Path found
 		Bits nextDir = GetLongName(curDir, dir, sizeof(dir));
