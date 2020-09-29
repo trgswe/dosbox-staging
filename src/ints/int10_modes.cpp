@@ -744,6 +744,8 @@ bool INT10_SetVideoMode(Bit16u mode)
 	int10.vesa_setmode=0xffff;
 	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
 
+	DEBUG_LOG_MSG("Set Video Mode %X", mode);
+
 	if (!IS_EGAVGA_ARCH)
 		return INT10_SetVideoMode_OTHER(mode, clearmem);
 

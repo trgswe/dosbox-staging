@@ -119,6 +119,7 @@ public:
 	void CMD_SHIFT(char * args);
 	void CMD_VER(char * args);
 	void CMD_LS(char *args);
+	void CMD_MODE(char *args);
 	/* The shell's variables */
 	uint16_t input_handle = 0;
 	BatchFile *bf = nullptr;
