@@ -18,11 +18,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "support.h"
+#include "string_utils.h"
 
 #include <gtest/gtest.h>
 
 #include <string>
+
+#include "support.h"
 
 namespace {
 
