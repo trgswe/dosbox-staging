@@ -45,6 +45,7 @@ static SHELL_Cmd cmd_list[] = {
 	{ "CHDIR",    1, &DOS_Shell::CMD_CHDIR,    "SHELL_CMD_CHDIR_HELP" },
 	{ "CHOICE",   1, &DOS_Shell::CMD_CHOICE,   "SHELL_CMD_CHOICE_HELP" },
 	{ "CLS",      0, &DOS_Shell::CMD_CLS,      "SHELL_CMD_CLS_HELP" },
+	{ "MODE",     0, &DOS_Shell::CMD_MODE,     "SHELL_CMD_CLS_HELP" },
 	{ "COPY",     0, &DOS_Shell::CMD_COPY,     "SHELL_CMD_COPY_HELP" },
 	{ "DATE",     0, &DOS_Shell::CMD_DATE,     "SHELL_CMD_DATE_HELP" },
 	{ "DEL",      0, &DOS_Shell::CMD_DELETE,   "SHELL_CMD_DELETE_HELP" },
@@ -1592,4 +1593,52 @@ void DOS_Shell::CMD_VER(char *args)
 	} else
 		WriteOut(MSG_Get("SHELL_CMD_VER_VER"), VERSION,
 		         dos.version.major, dos.version.minor);
+}
+
+void DOS_Shell::CMD_MODE(char *args)
+{
+	bool r = ScanCMDBool(args, "r");
+	bool q = ScanCMDBool(args, "q");
+	bool w = ScanCMDBool(args, "w");
+	bool a = ScanCMDBool(args, "a");
+	bool aa = ScanCMDBool(args, "aa");
+	bool b = ScanCMDBool(args, "b");
+	bool c = ScanCMDBool(args, "c");
+	bool d = ScanCMDBool(args, "d");
+	bool e = ScanCMDBool(args, "e");
+	// 132x50 - 0x55
+	// 132x86 - 0x54
+	if (q)
+		INT10_SetVideoMode(0x1); // 40x25 - ok
+	if (a)
+		INT10_SetVideoMode(0x3); // 80x25 - ok
+	if (aa)
+		INT10_SetVideoMode(0x7); // 80x25 - ok - 9x14 font - fail
+	if (w)
+		INT10_SetVideoMode(0x54); // 132x86 - atm it's (132x43)
+	if (b)
+		INT10_SetVideoMode(0x55); // 132x25 - heh
+	if (c)
+		INT10_SetVideoMode(0x108); // 80x60 - ok
+	if (d)
+		INT10_SetVideoMode(0x109); // 132x25 - ok
+	if (e)
+		INT10_SetVideoMode(0x10a); // 132x43 - ok
+	if (r) {
+		reg_ah = 0x12; // EGA/VGA special functions
+		reg_al = 0x02; // 400 scan lines (VGA only)
+		reg_bl = 0x30; // Set text mode scan lines
+		CALLBACK_RunRealInt(0x10);
+
+		reg_ax = 0x0003; // Set 80x25 video mode
+		CALLBACK_RunRealInt(0x10);
+
+		reg_ax = 0x1112; // Load and activate ROM 8x8 character set
+		CALLBACK_RunRealInt(0x10);
+
+		reg_ah = 0x01; // Set cursor shape and size
+		reg_ch = 0x06; // start / upper row of character matrix
+		reg_cl = 0x07; // end / lower row of character matrix
+		CALLBACK_RunRealInt(0x10);
+	}
 }
