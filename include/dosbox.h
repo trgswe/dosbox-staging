@@ -23,11 +23,21 @@
 #include "compiler.h"
 #include "types.h"
 
+#include <libintl.h>
+#include <locale.h>
+
 [[noreturn]] void E_Exit(const char *message, ...)
         GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 
-void MSG_Add(const char*,const char*); //add messages to the internal languagefile
-const char* MSG_Get(char const *);     //get messages from the internal languagefile
+#define _(STRING) gettext(STRING)
+
+// Add message to the internal languagefile
+// DEPRECATED - use gettext instead
+void MSG_Add(const char *, const char *);
+
+// Get messages from the internal languagefile
+// DEPRECATED - use gettext instead
+const char *MSG_Get(char const *);
 
 class Section;
 

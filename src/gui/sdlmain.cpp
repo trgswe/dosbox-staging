@@ -3203,6 +3203,20 @@ void OverrideWMClass()
 #endif
 }
 
+void setup_i18n_env()
+{
+	setlocale(LC_ALL, "");
+	// PWD -> ./pl/LC_MESSAGES/dosbox.mo
+	bindtextdomain("dosbox", getenv("PWD"));
+	textdomain("dosbox");
+
+	//const char *pl_code = "CP852"; // to test: `keyb pl`
+	const char *default_code = "US-ASCII";
+	//const char *code = bind_textdomain_codeset("dosbox", pl_code);
+	const char *code = bind_textdomain_codeset("dosbox", default_code);
+	DEBUG_LOG_MSG("gettext encoding: %s", code);
+}
+
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
 	int rcode = 0; // assume good until proven otherwise
@@ -3211,6 +3225,7 @@ int main(int argc, char* argv[]) {
 		OverrideWMClass(); // Before SDL2 video subsystem is initialized
 
 		CROSS_DetermineConfigPaths();
+		setup_i18n_env();
 
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);

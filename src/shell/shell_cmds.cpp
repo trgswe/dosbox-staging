@@ -836,7 +836,7 @@ void DOS_Shell::CMD_LS(char *args)
 
 	const std::string pattern = to_search_pattern(args);
 	if (!DOS_FindFirst(pattern.c_str(), 0xffff & ~DOS_ATTR_VOLUME)) {
-		WriteOut(MSG_Get("SHELL_CMD_LS_PATH_ERR"), trim(args));
+		WriteOut(_("ls: cannot access '%s': No such file or directory\n"), trim(args));
 		dos.dta(original_dta);
 		return;
 	}
@@ -1308,7 +1308,8 @@ void DOS_Shell::CMD_REM(char * args) {
 
 void DOS_Shell::CMD_PAUSE(char *args) {
 	HELP("PAUSE");
-	WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
+	// l10n This message must not end in a newline
+	WriteOut(_("Press any key to continue..."));
 	uint8_t c;
 	uint16_t n = 1;
 	DOS_ReadFile(STDIN, &c, &n);
