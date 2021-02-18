@@ -177,7 +177,6 @@ jobs:
             -Ddefault_library=static \
             -Db_asneeded=true \
             -Db_lto=true \
-            -Duse_fluidsynth=false \
             build
 
       - name: Build

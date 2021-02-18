@@ -134,7 +134,6 @@ jobs:
             -Db_lto=true \
             -Dtry_sdl2_static=true \
             -Duse_sdl2_net=false \
-            -Duse_fluidsynth=false \
             -Duse_opusfile=false \
             -Duse_png=false \
             build
