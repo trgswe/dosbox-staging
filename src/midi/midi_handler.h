@@ -67,7 +67,13 @@ public:
 
 	virtual void PlaySysex(MAYBE_UNUSED uint8_t *sysex, MAYBE_UNUSED size_t len) {}
 
-	virtual void ListAll(MAYBE_UNUSED Program *base) {}
+	/* Print all available user options for configuring this device.
+	 *
+	 * Return the number of options. If options can't be listed because
+	 * the device is not configured, return -1. If device does not support
+	 * listing of options, return -2.
+	 */
+	virtual int ListAll(Program *) { return -2; }
 
 	MidiHandler *next;
 };

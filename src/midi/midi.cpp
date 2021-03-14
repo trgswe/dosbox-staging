@@ -34,6 +34,7 @@
 #include "mapper.h"
 #include "midi_handler.h"
 #include "pic.h"
+#include "programs.h"
 #include "setup.h"
 #include "support.h"
 #include "timer.h"
@@ -287,8 +288,27 @@ getdefault:
 
 void MIDI_ListAll(Program *output_handler)
 {
-	if (midi.handler)
-		midi.handler->ListAll(output_handler);
+	MidiHandler *handler = handler_list;
+	for (handler = handler_list; handler; handler = handler->next) {
+		const std::string name = handler->GetName();
+		if (name == "none")
+			continue;
+
+		if (midi.handler == handler) {
+			output_handler->WriteOut("\033[37;1m%s\033[0m (active):\n",
+			                         name.c_str());
+		} else {
+			output_handler->WriteOut("%s:\n", name.c_str());
+		}
+
+		const int num = handler->ListAll(output_handler);
+		if (num == -1)
+			output_handler->WriteOut("  device not configured\n");
+		if (num == -2)
+			output_handler->WriteOut("  listing not supported\n");
+
+		output_handler->WriteOut("\n");
+	}
 }
 
 static MIDI* test;

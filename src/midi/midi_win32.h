@@ -123,14 +123,15 @@ public:
 		}
 	}
 
-	void ListAll(Program *base) override
+	int ListAll(Program *base) override
 	{
 		unsigned int total = midiOutGetNumDevs();
 		for(unsigned int i = 0;i < total;i++) {
 			MIDIOUTCAPS mididev;
 			midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
-			base->WriteOut("%2d\t \"%s\"\n",i,mididev.szPname);
+			base->WriteOut("  %2d\t \"%s\"\n", i, mididev.szPname);
 		}
+		return static_cast<int>(total);
 	}
 };
 
