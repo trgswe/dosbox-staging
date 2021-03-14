@@ -33,6 +33,7 @@
 #include "cross.h"
 #include "fs_utils.h"
 #include "mixer.h"
+#include "programs.h"
 #include "support.h"
 
 static constexpr int FRAMES_PER_BUFFER = 512; // synth granularity
@@ -444,6 +445,22 @@ void MidiHandlerFluidsynth::Render()
 		// and then move it into the playable queue
 		playable.Enqueue(std::move(playable_buffer));
 	}
+}
+
+int MidiHandlerFluidsynth::ListAll(Program *output)
+{
+	// TODO list all available soundfonts, not only the selected one
+
+	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
+	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
+	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
+
+	if (!soundfont.empty()) {
+		output->WriteOut("  %s\n", soundfont.c_str());
+		return 1;
+	}
+
+	return -1;
 }
 
 static void fluid_init(MAYBE_UNUSED Section *sec)
