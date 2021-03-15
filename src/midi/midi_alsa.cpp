@@ -26,6 +26,7 @@
 #include <string>
 #include <sstream>
 
+#include "programs.h"
 #include "string_utils.h"
 
 #define ADDR_DELIM ".:"
@@ -212,6 +213,38 @@ bool MidiHandler_alsa::Open(const char *conf)
 
 	LOG_MSG("ALSA: Client initialised [%d:%d]", seq_client, seq_port);
 	return true;
+}
+
+int MidiHandler_alsa::ListAll(Program *out)
+{
+	snd_seq_t *seq;
+	if (snd_seq_open(&seq, "hw", SND_SEQ_OPEN_OUTPUT, 0) != 0)
+		return -1; // TODO 
+
+	// Iterate over all ALSA sequencers:
+	snd_seq_client_info_t *client_info;
+	snd_seq_client_info_malloc(&client_info);
+	snd_seq_client_info_set_client(client_info, -1);
+	while (snd_seq_query_next_client(seq, client_info) >= 0) {
+		// Iterate over all ports in this sequencer:
+		const int client_id = snd_seq_client_info_get_client(client_info);
+		const char *client_name = snd_seq_client_info_get_name(client_info);
+		snd_seq_port_info_t *port_info;
+		snd_seq_port_info_malloc(&port_info);
+		snd_seq_port_info_set_client(port_info, client_id);
+		snd_seq_port_info_set_port(port_info, -1);
+		while (snd_seq_query_next_port(seq, port_info) >= 0) {
+			const auto *addr = snd_seq_port_info_get_addr(port_info);
+			const char *name = snd_seq_port_info_get_name(port_info);
+
+			out->WriteOut("  %3d:%d %s - %s\n", addr->client,
+			              addr->port, client_name, name);
+		}
+		snd_seq_port_info_free(port_info);
+	}
+	snd_seq_client_info_free(client_info);
+	snd_seq_close(seq);
+	return 0;
 }
 
 #endif // C_ALSA

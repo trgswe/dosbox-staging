@@ -54,6 +54,7 @@ public:
 	void Close() override;
 	void PlayMsg(const uint8_t *msg) override;
 	void PlaySysex(uint8_t *sysex, size_t len) override;
+	int ListAll(Program *out) override;
 };
 
 #endif // C_ALSA
