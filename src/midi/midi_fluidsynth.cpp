@@ -35,6 +35,8 @@
 #include "mixer.h"
 #include "programs.h"
 #include "support.h"
+#include "../ints/int10.h"
+
 
 static constexpr int FRAMES_PER_BUFFER = 512; // synth granularity
 
@@ -447,20 +449,79 @@ void MidiHandlerFluidsynth::Render()
 	}
 }
 
+std::string format_sf2_line(const std::string &path, const std::string &name)
+{
+	const size_t term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+	assert(term_width > 0);
+	std::vector<char> line_buf(term_width);
+	snprintf(line_buf.data(), term_width, "  %-16s - %s%s\n", name.c_str(),
+	         path.c_str(), name.c_str());
+
+	std::string line = line_buf.data();
+	// If line ends with a newline, then the whole description fit into a
+	// single line - no further formatting is necessary.
+	if (line.back() == '\n') 
+		return line;
+
+	// The description was too long and got trimmed; place three dots in
+	// the end to make it clear to the user.
+	assert(line.size() > 4);
+	auto it = line.end();
+	assert(*it == '\0');
+	*(--it) = '\n';
+	*(--it) = '.';
+	*(--it) = '.';
+	*(--it) = '.';
+	return line;
+}
+
 int MidiHandlerFluidsynth::ListAll(Program *output)
 {
-	// TODO list all available soundfonts, not only the selected one
-
 	auto *section = static_cast<Section_prop *>(control->GetSection("fluidsynth"));
 	const auto sf_spec = parse_sf_pref(section->Get_string("soundfont"), 100);
-	const auto soundfont = find_sf_file(std::get<std::string>(sf_spec));
+	const auto sf_name = std::get<std::string>(sf_spec);
 
-	if (!soundfont.empty()) {
-		output->WriteOut("  %s\n", soundfont.c_str());
-		return 1;
+	// If selected soundfont exists in the current working directory,
+	// then print it.
+	const std::string sf_path = CROSS_ResolveHome(sf_name);
+	if (path_exists(sf_path))
+		output->WriteOut("  %s\n", sf_path.c_str());
+
+	// Go through all soundfont directories and list all .sf2 files.
+	char dir_entry_name[CROSS_LEN];
+
+	bool is_directory = false;
+	for (const auto &dir_path : get_data_dirs()) {
+		dir_information *dir = open_directory(dir_path.c_str());
+		if (!dir)
+			continue;
+		if (!read_directory_first(dir, dir_entry_name, is_directory))
+			continue;
+		do {
+			if (is_directory)
+				continue;
+
+			const size_t name_len = strlen(dir_entry_name);
+			if (name_len < 4)
+				continue;
+
+			const char *ext = dir_entry_name + name_len - 4;
+			const bool is_sf2 = (strcasecmp(ext, ".sf2") == 0);
+			if (!is_sf2)
+				continue;
+
+			//output->WriteOut("  %-16s - %s%s\n", dir_entry_name,
+			//                 dir_path.c_str(), dir_entry_name);
+			const auto line = format_sf2_line(dir_path, dir_entry_name);
+			output->WriteOut(line.c_str());
+
+			//snprintf(line_buf, sizeof(line_buf), "  %-16s - %s%s\n",
+			//         dir_entry_name, dir_path.c_str(), dir_entry_name);
+			//output->WriteOut(line_buf);
+		} while (read_directory_next(dir, dir_entry_name, is_directory));
 	}
 
-	return -1;
+	return 0;
 }
 
 static void fluid_init(MAYBE_UNUSED Section *sec)
