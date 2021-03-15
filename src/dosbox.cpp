@@ -742,8 +742,10 @@ void DOSBOX_Init(void) {
 	GUS_AddConfigSection(control);
 
 	secprop = control->AddSection_prop("speaker",&PCSPEAKER_Init,true);//done
-	Pbool = secprop->Add_bool("pcspeaker",Property::Changeable::WhenIdle,true);
-	Pbool->Set_help("Enable PC-Speaker emulation.");
+	const char* pcspeakers[] = {"true","false","exp",0};
+	Pstring = secprop->Add_string("pcspeaker",Property::Changeable::WhenIdle,"true");
+	Pstring->Set_values(pcspeakers);
+	Pstring->Set_help("Enable PC-Speaker emulation, possible values are: 'true', 'false' and 'exp' for experimental emulation that usually sounds better (not always)");
 
 	// Basis for the default PC-Speaker sample generation rate:
 	//   "With the PC speaker, typically a 6-bit DAC with a maximum value of

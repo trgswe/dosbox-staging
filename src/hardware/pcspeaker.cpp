@@ -91,6 +91,7 @@ static struct {
 	uint16_t prev_pos = 0u;
 	uint8_t idle_countdown = 0u;
 	bool neutralize_dc_offset = true;
+	Bitu type;
 } spkr;
 
 static bool SpeakerExists()
@@ -292,6 +293,8 @@ void PCSPEAKER_SetCounter(Bitu cntr, Bitu mode)
 			spkr.pit_mode=0;
 			return;
 		}
+        if (spkr.type == 1 && spkr.mode==SPKR_PIT_ON && cntr<10000)
+            spkr.pit_index=spkr.pit_max;
 		spkr.pit_new_max=(1000.0f/PIT_TICK_RATE)*cntr;
 		spkr.pit_new_half=spkr.pit_new_max/2;
 		break;
@@ -466,9 +469,14 @@ public:
 	PCSPEAKER(Section *configuration) : Module_base(configuration)
 	{
 		Section_prop * section=static_cast<Section_prop *>(configuration);
-		if (!section->Get_bool("pcspeaker"))
+		if ((strcmp(section->Get_string("pcspeaker"), "true") != 0) &&
+		    (strcmp(section->Get_string("pcspeaker"), "exp") != 0))
 			return;
 		spkr.rate = std::max(section->Get_int("pcrate"), 8000);
+		if (strcmp(section->Get_string("pcspeaker"), "true") == 0)
+			spkr.type = 0;
+		if (strcmp(section->Get_string("pcspeaker"), "exp") == 0)
+			spkr.type = 1;
 
 		std::string dc_offset_pref = section->Get_string("zero_offset");
 		if (dc_offset_pref == "auto")
