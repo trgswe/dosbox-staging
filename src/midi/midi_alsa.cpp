@@ -25,7 +25,9 @@
 
 #include <string>
 #include <sstream>
+#include <functional>
 
+#include "logging.h"
 #include "programs.h"
 #include "string_utils.h"
 
@@ -39,6 +41,39 @@
 /* SND_SEQ_OPEN_OUT causes oops on early version of ALSA */
 #define my_snd_seq_open(seqp) snd_seq_open(seqp, SND_SEQ_OPEN)
 #endif
+
+using port_action_t = std::function<void(snd_seq_client_info_t *client_info,
+                                         snd_seq_port_info_t *port_info)>;
+
+void for_each_alsa_seq_port(port_action_t action)
+{
+	// We can't reuse the sequencer from midi handler, as the function might
+	// be called before that sequencer is created.
+	snd_seq_t *seq;
+	if (snd_seq_open(&seq, "hw", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
+		LOG_MSG("ALSA: Error: Can't open MIDI sequencer");
+		return;
+	}
+
+	snd_seq_client_info_t *client_info;
+	snd_seq_client_info_malloc(&client_info);
+
+	snd_seq_port_info_t *port_info;
+	snd_seq_port_info_malloc(&port_info);
+
+	snd_seq_client_info_set_client(client_info, -1);
+	while (snd_seq_query_next_client(seq, client_info) >= 0) {
+		const int client_id = snd_seq_client_info_get_client(client_info);
+		snd_seq_port_info_set_client(port_info, client_id);
+		snd_seq_port_info_set_port(port_info, -1);
+		while (snd_seq_query_next_port(seq, port_info) >= 0)
+			action(client_info, port_info);
+	}
+
+	snd_seq_port_info_free(port_info);
+	snd_seq_client_info_free(client_info);
+	snd_seq_close(seq);
+}
 
 void MidiHandler_alsa::send_event(int do_flush)
 {
@@ -217,33 +252,13 @@ bool MidiHandler_alsa::Open(const char *conf)
 
 int MidiHandler_alsa::ListAll(Program *out)
 {
-	snd_seq_t *seq;
-	if (snd_seq_open(&seq, "hw", SND_SEQ_OPEN_OUTPUT, 0) != 0)
-		return -1; // TODO 
-
-	// Iterate over all ALSA sequencers:
-	snd_seq_client_info_t *client_info;
-	snd_seq_client_info_malloc(&client_info);
-	snd_seq_client_info_set_client(client_info, -1);
-	while (snd_seq_query_next_client(seq, client_info) >= 0) {
-		// Iterate over all ports in this sequencer:
-		const int client_id = snd_seq_client_info_get_client(client_info);
-		const char *client_name = snd_seq_client_info_get_name(client_info);
-		snd_seq_port_info_t *port_info;
-		snd_seq_port_info_malloc(&port_info);
-		snd_seq_port_info_set_client(port_info, client_id);
-		snd_seq_port_info_set_port(port_info, -1);
-		while (snd_seq_query_next_port(seq, port_info) >= 0) {
-			const auto *addr = snd_seq_port_info_get_addr(port_info);
-			const char *name = snd_seq_port_info_get_name(port_info);
-
-			out->WriteOut("  %3d:%d %s - %s\n", addr->client,
-			              addr->port, client_name, name);
-		}
-		snd_seq_port_info_free(port_info);
-	}
-	snd_seq_client_info_free(client_info);
-	snd_seq_close(seq);
+	auto print_port = [out](auto *client_info, auto *port_info) {
+		const auto *addr = snd_seq_port_info_get_addr(port_info);
+		out->WriteOut("  %3d:%d - %s - %s\n", addr->client, addr->port,
+		              snd_seq_client_info_get_name(client_info),
+		              snd_seq_port_info_get_name(port_info));
+	};
+	for_each_alsa_seq_port(print_port);
 	return 0;
 }
 
