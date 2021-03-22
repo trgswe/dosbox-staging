@@ -128,6 +128,8 @@ typedef void (APIENTRYP PFNGLUNIFORM1IPROC) (GLint location, GLint v0);
 typedef void (APIENTRYP PFNGLUSEPROGRAMPROC) (GLuint program);
 typedef void (APIENTRYP PFNGLVERTEXATTRIBPOINTERPROC) (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid *pointer);
 
+typedef const GLubyte *(APIENTRYP PFNGLGETSTRINGIPROC)(GLenum name, GLuint index);
+
 /* Apple defines these functions in their GL header (as core functions)
  * so we can't use their names as function pointers. We can't link
  * directly as some platforms may not have them. So they get their own
@@ -155,6 +157,10 @@ PFNGLUSEPROGRAMPROC glUseProgram = NULL;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 }
 
+namespace gl3 {
+PFNGLGETSTRINGIPROC glGetStringi = nullptr;
+}
+
 /* "using" is meant to hide identical names declared in outer scope
  * but is unreliable, so just redefine instead.
  */
@@ -177,6 +183,7 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 #define glUniform1i               gl2::glUniform1i
 #define glUseProgram              gl2::glUseProgram
 #define glVertexAttribPointer     gl2::glVertexAttribPointer
+#define glGetStringi              gl3::glGetStringi
 
 #endif // C_OPENGL
 
@@ -1115,8 +1122,11 @@ dosurface:
 		if (!(flags & GFX_CAN_32))
 			goto dosurface;
 		int texsize = 2 << int_log2(width > height ? width : height);
-		if (texsize>sdl.opengl.max_texsize) {
-			LOG_MSG("SDL:OPENGL: No support for texturesize of %d, falling back to surface",texsize);
+		if (texsize > sdl.opengl.max_texsize) {
+			LOG_MSG("OPENGL: Max texture size: %d",
+			        sdl.opengl.max_texsize);
+			LOG_MSG("OPENGL: No support for texturesize of %d, falling back to surface",
+			        texsize);
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -2223,6 +2233,8 @@ static void GUI_StartUp(Section *sec)
 	SetupWindowResolution(section->Get_string("windowresolution"));
 
 #if C_OPENGL
+
+	LOG_MSG("OPENGL: 1: want opengl: %d", (sdl.desktop.want_type == SCREEN_OPENGL));
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
 		if (!SetDefaultWindowMode()) {
 			LOG_MSG("Could not create OpenGL window, switching back to surface");
@@ -2234,6 +2246,9 @@ static void GUI_StartUp(Section *sec)
 				sdl.desktop.want_type = SCREEN_SURFACE;
 			}
 		}
+
+		LOG_MSG("OPENGL: 2: want opengl: %d", (sdl.desktop.want_type == SCREEN_OPENGL));
+
 		if (sdl.desktop.want_type == SCREEN_OPENGL) {
 			sdl.opengl.program_object = 0;
 			glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
@@ -2255,6 +2270,8 @@ static void GUI_StartUp(Section *sec)
 			glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
 			glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
 			glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)SDL_GL_GetProcAddress("glVertexAttribPointer");
+			glGetStringi = (PFNGLGETSTRINGIPROC)SDL_GL_GetProcAddress("glGetStringi");
+
 			sdl.opengl.use_shader = (glAttachShader && glCompileShader && glCreateProgram && glDeleteProgram && glDeleteShader && \
 				glEnableVertexAttribArray && glGetAttribLocation && glGetProgramiv && glGetProgramInfoLog && \
 				glGetShaderiv && glGetShaderInfoLog && glGetUniformLocation && glLinkProgram && glShaderSource && \
@@ -2264,7 +2281,9 @@ static void GUI_StartUp(Section *sec)
 			sdl.opengl.framebuf=0;
 			sdl.opengl.texture=0;
 			sdl.opengl.displaylist=0;
-			glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
+			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
+			LOG_MSG("OPENGL: GL_MAX_TEXTURE_SIZE: %d", sdl.opengl.max_texsize);
+
 			glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
 			glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
 			glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
@@ -2272,14 +2291,30 @@ static void GUI_StartUp(Section *sec)
 			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
 			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
 
+			LOG_MSG("OPENGL: glGenBuffersARB    %p",  glGenBuffersARB);
+			LOG_MSG("OPENGL: glBindBufferARB    %p",  glBindBufferARB);
+			LOG_MSG("OPENGL: glDeleteBuffersARB %p",  glDeleteBuffersARB);
+			LOG_MSG("OPENGL: glBufferDataARB    %p",  glBufferDataARB);
+			LOG_MSG("OPENGL: glMapBufferARB     %p",  glMapBufferARB);
+			LOG_MSG("OPENGL: glUnmapBufferARB   %p",  glUnmapBufferARB);
+
 			// TODO According to Khronos documentation, the correct
 			// way to query GL_EXTENSIONS is using glGetStringi from
 			// OpenGL 3.0; replace with OpenGL loading library (such
 			// as GLEW or libepoxy)
 			const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
+
+			LOG_MSG("OPENGL: GL_EXTENSIONS (%zu): %s", strlen(gl_ext), gl_ext);
+
 			if(gl_ext && *gl_ext){
 				sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != NULL);
 				sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") != NULL);
+
+				int old_method_pbo = (strstr(gl_ext,"GL_ARB_pixel_buffer_object") != NULL);
+				LOG_MSG("OPENGL: EXT_packed_pixels: %d", sdl.opengl.packed_pixel);
+				LOG_MSG("OPENGL: EXT_paletted_texture: %d", sdl.opengl.paletted_texture);
+				LOG_MSG("OPENGL: GL_ARB_pixel_buffer_object: %d", old_method_pbo);
+
 				sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") != NULL ) &&
 				    glGenBuffersARB && glBindBufferARB && glDeleteBuffersARB && glBufferDataARB &&
 				    glMapBufferARB && glUnmapBufferARB;
@@ -2294,6 +2329,23 @@ static void GUI_StartUp(Section *sec)
 			LOG_MSG("OPENGL: Pixel buffer object extension: %s",
 			        sdl.opengl.pixel_buffer_object ? "available"
 			                                       : "missing");
+
+			LOG_MSG("OPENGL: testing new method:");
+
+			bool found = false;
+			if (glGetStringi == nullptr) {
+				LOG_MSG("OPENGL: glGetStringi not available");
+			} else {
+				GLint n;
+				glGetIntegerv(GL_NUM_EXTENSIONS, &n);
+				for (GLint i = 0; i < n; i++) {
+					const std::string gl_extension = (char *)glGetStringi(GL_EXTENSIONS, i);
+					printf(":: %d %s\n", i, gl_extension.c_str());
+					if (gl_extension == "GL_ARB_pixel_buffer_object")
+						found = true;
+				}
+			}
+			LOG_MSG("OPENGL: maybe pbo found after all? %s", found ? "yup" : "nope");
 		}
 	} /* OPENGL is requested end */
 #endif	//OPENGL
