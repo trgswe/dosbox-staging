@@ -2270,6 +2270,8 @@ static void GUI_StartUp(Section *sec)
 			glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
 			glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
 			glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)SDL_GL_GetProcAddress("glVertexAttribPointer");
+
+			LOG_MSG("OPENGL: glGetStringi       %p",  glGetStringi);
 			glGetStringi = (PFNGLGETSTRINGIPROC)SDL_GL_GetProcAddress("glGetStringi");
 
 			sdl.opengl.use_shader = (glAttachShader && glCompileShader && glCreateProgram && glDeleteProgram && glDeleteShader && \
@@ -2297,6 +2299,7 @@ static void GUI_StartUp(Section *sec)
 			LOG_MSG("OPENGL: glBufferDataARB    %p",  glBufferDataARB);
 			LOG_MSG("OPENGL: glMapBufferARB     %p",  glMapBufferARB);
 			LOG_MSG("OPENGL: glUnmapBufferARB   %p",  glUnmapBufferARB);
+			LOG_MSG("OPENGL: glGetStringi       %p",  glGetStringi);
 
 			// TODO According to Khronos documentation, the correct
 			// way to query GL_EXTENSIONS is using glGetStringi from
@@ -2304,7 +2307,7 @@ static void GUI_StartUp(Section *sec)
 			// as GLEW or libepoxy)
 			const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
 
-			LOG_MSG("OPENGL: after getting extensions");
+			LOG_MSG("OPENGL: after getting extensions %p", gl_ext);
 			// hmm? line below crashes on macOS?
 			//LOG_MSG("OPENGL: GL_EXTENSIONS (%zu): %s", strlen(gl_ext), gl_ext);
 
@@ -2333,6 +2336,7 @@ static void GUI_StartUp(Section *sec)
 			                                       : "missing");
 
 			LOG_MSG("OPENGL: testing new method:");
+			LOG_MSG("OPENGL: glGetStringi %p", glGetStringi);
 
 			bool found = false;
 			if (glGetStringi == nullptr) {
@@ -2340,9 +2344,14 @@ static void GUI_StartUp(Section *sec)
 			} else {
 				GLint n;
 				glGetIntegerv(GL_NUM_EXTENSIONS, &n);
+				LOG_MSG("OPENGL: GL_NUM_EXTENSIONS %d", n);
+				if (n < 0)
+					n = 0;
+				char gl_ext[30];
 				for (GLint i = 0; i < n; i++) {
-					const std::string gl_extension = (char *)glGetStringi(GL_EXTENSIONS, i);
-					printf(":: %d %s\n", i, gl_extension.c_str());
+					safe_strcpy(gl_ext, (char *)glGetStringi(GL_EXTENSIONS, i));
+					const std::string gl_extension = gl_ext;
+					LOG_MSG(":: %d %s", i, gl_extension.c_str());
 					if (gl_extension == "GL_ARB_pixel_buffer_object")
 						found = true;
 				}
