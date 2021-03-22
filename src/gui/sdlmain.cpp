@@ -2304,7 +2304,9 @@ static void GUI_StartUp(Section *sec)
 			// as GLEW or libepoxy)
 			const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
 
-			LOG_MSG("OPENGL: GL_EXTENSIONS (%zu): %s", strlen(gl_ext), gl_ext);
+			LOG_MSG("OPENGL: after getting extensions");
+			// hmm? line below crashes on macOS?
+			//LOG_MSG("OPENGL: GL_EXTENSIONS (%zu): %s", strlen(gl_ext), gl_ext);
 
 			if(gl_ext && *gl_ext){
 				sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") != NULL);
