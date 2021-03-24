@@ -39,6 +39,7 @@
 #include "mem.h"
 #include "program_autotype.h"
 #include "program_ls.h"
+#include "program_mode.h"
 #include "regs.h"
 #include "setup.h"
 #include "shell.h"
@@ -1939,6 +1940,7 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("LOADROM.COM", LOADROM_ProgramStart);
 	PROGRAMS_MakeFile("LS.COM", LS_ProgramStart);
 	PROGRAMS_MakeFile("MEM.COM", MEM_ProgramStart);
+	PROGRAMS_MakeFile("MODE.COM", MODE_ProgramStart);
 	PROGRAMS_MakeFile("MOUNT.COM", MOUNT_ProgramStart);
 	PROGRAMS_MakeFile("RESCAN.COM", RESCAN_ProgramStart);
 }

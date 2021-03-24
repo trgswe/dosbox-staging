@@ -22,6 +22,7 @@ libdos_sources = files([
   'drive_virtual.cpp',
   'program_autotype.cpp',
   'program_ls.cpp',
+  'program_mode.cpp',
 ])
 
 libdos = static_library('dos', libdos_sources,
