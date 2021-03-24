@@ -31,15 +31,16 @@
 
 #include "../ints/int10.h"
 
-static void set_mode_80x50();
+static void set_mode_with_8x8_font(uint16_t video_mode);
 
 static std::map<std::string, std::function<void()>> modes = {
-        {"40x25", []() { INT10_SetVideoMode(0x1); }},
-        {"80x25", []() { INT10_SetVideoMode(0x3); }},
-        {"80x50", set_mode_80x50},
-        {"80x60", [] { INT10_SetVideoMode(0x108); }},
-        {"132x25", []() { INT10_SetVideoMode(0x109); }},
-        {"132x43", []() { INT10_SetVideoMode(0x10a); }},
+        {"40x25", [] { INT10_SetVideoMode(0x0001); }},
+        {"80x25", []() { INT10_SetVideoMode(0x0003); }},
+        {"80x50", []() { set_mode_with_8x8_font(0x0003); }},
+        {"80x60", []() { INT10_SetVideoMode(0x0108); }},
+        {"132x25", []() { INT10_SetVideoMode(0x0055); }}, // also 0x0109 (?)
+        {"132x43", []() { INT10_SetVideoMode(0x010a); }},
+        {"132x50", []() { set_mode_with_8x8_font(0x0055); }},
 };
 
 static bool mode_exists(const std::string key)
@@ -47,14 +48,14 @@ static bool mode_exists(const std::string key)
 	return modes.count(key) == 1;
 }
 
-static void set_mode_80x50()
+static void set_mode_with_8x8_font(uint16_t video_mode)
 {
 	reg_ah = 0x12; // EGA/VGA special functions
 	reg_al = 0x02; // 400 scan lines (VGA only)
 	reg_bl = 0x30; // Set text mode scan lines
 	CALLBACK_RunRealInt(0x10);
 
-	reg_ax = 0x0003; // Set 80x25 video mode
+	reg_ax = video_mode;
 	CALLBACK_RunRealInt(0x10);
 
 	reg_ax = 0x1112; // Load and activate ROM 8x8 character set
