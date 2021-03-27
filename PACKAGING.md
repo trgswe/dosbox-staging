@@ -33,6 +33,21 @@ features to be enabled):
 
 Look into [`meson_options.txt`] to learn how to disable these features.
 
+## Runtime dependencies
+
+In addition to all required libraries, make **FluidR3 (GM)** soundfont
+a dependency. It a FLOSS, very high quality soundfont, working very well in
+wide range of DOS games.
+
+This font package includes `default.sf2` symlink - it will be picked up
+automatically as default soundfont when user turns on built-in `fluidsynth`
+synthesizer, making it easier for end-users to turn on MIDI.
+
+*It's not a hard dependency, DOSBox Staging will work fine if this soundfont
+is missing, except end users will need to configure soundfont manually.*
+
+[Repology: fluid-soundfont package][fluid-soundfont]
+
 
 ## Normal build and install instructions
 
@@ -156,3 +171,4 @@ TODO
 
 [Meson]: https://mesonbuild.com/
 [`meson_options.txt`]: meson_options.txt
+[fluid-soundfont]: https://repology.org/project/fluid-soundfont/versions
