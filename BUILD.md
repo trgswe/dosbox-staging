@@ -1,3 +1,10 @@
+# Build instructions
+
+This document is intended for **contributors and developers**.
+If you are a normal user, follow instructions in [README.md](README.md).
+If you are a packager, follow instructions in [PACKAGING.md](PACKAGING.md).
+
+
 ## Minimum build requirements
 
 - C/C++ compiler with support for C++14

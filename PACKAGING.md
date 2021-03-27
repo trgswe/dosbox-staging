@@ -118,14 +118,28 @@ dest/
 ```
 
 If this is incorrect for your OS, adjust `meson setup` step to your
-requirements:
+requirements, or simply remove the files you don't need.
 
 [Meson Universal Options](https://mesonbuild.com/Builtin-options.html#universal-options)
 
 
 ## Vendoring dependencies
 
-TODO
+Some optional dependencies are provided as Meson subprojects - this way
+you can optionally vendor them, if you need to.
+
+Before build:
+
+```sh
+meson subprojects download
+```
+
+Source code of dependencies is downloaded to `subprojects/packagecache/` -
+Meson will look in there for source code before attempting to download
+these dependencies.
+
+The exact URLs are in `subprojects/*.wrap` files.
+
 
 ## Static linking
 
@@ -150,26 +164,41 @@ libraries available on your OS, but here's how to do it:
 
 ## macOS-specific instructions
 
+macOS icon in .icns format is not bundled in the repository, you need to
+build it yourself:
+
+```sh
+brew install librsvg
+make -C contrib/icons dosbox-staging.icns
+```
+You'll find some other files that might be relevant to macOS packaging
+in `contrib/macos/`.
+
+
 ## FAQ
 
 ### Why binary is named `dosbox` and not `dosbox-staging`?
 
 DOSBox Staging is a drop-in replacement for older versions of DOSBox.
 We are very strict about backwards-compatibility - including compatibility
-with other software
+with other software and with user scripts.
+
+Notably, Wine VDM runs `dosbox` binary with special configuration when
+attempting to run 16-bit DOS software. Changing our binary name would break
+this usecase.
+
+By preserving the binary name we're also integrating nicely with GUI frontends,
+such as GameHub or Lutris.
+
 
 ### What's with the license?
 
 This project uses code covered by various Free/Libre licenses (see specific
 files to learn what licenses do they use). As an aggregate, this project is
 using **GNU General Public License 2.0 or later** (SPDX identifier:
-`GPL-2.0-or-later`) - please place this exact information when filling in
-license information in your package. Also, be vigilant about including all
-license files.
-
-### Where are translations?
-
-TODO
+`GPL-2.0-or-later`) - please use the correct license name when filling in
+information in your package. Also, be vigilant about including all license
+files.
 
 [Meson]: https://mesonbuild.com/
 [`meson_options.txt`]: meson_options.txt
