@@ -23,13 +23,13 @@ features to be enabled):
 | SDL2                   | mandatory | (multiple features)
 | SDL2\_net              | optional  | IPX emulator, Serial modem emulator
 
-<sup>
-＊ – ALSA is enabled automatically only on Linux. You don't need to disable
-     it manually on other OSes.<br/>
-† – You can use this library via meson subproject and make it a vendored
-         dependency if it's missing from the repositories. Or simply disable it
+<sub>
+＊ – ALSA is enabled automatically only on Linux. You don't need to disable it manually on other OSes.<br>
+† – You can use this library via meson subproject and make it a 
+     <a href="vendoring-dependencies">vendored dependency</a>
+     if it's missing from the repositories. Or simply disable it
          until the library will be packaged.
-</sup>
+</sub><br>
 
 Look into [`meson_options.txt`] to learn how to disable these features.
 
