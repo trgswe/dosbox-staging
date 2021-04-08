@@ -29,6 +29,7 @@
 #include <string>
 
 #define MT32EMU_API_TYPE 3
+#define MT32EMU_EXPORTS_TYPE 1
 #include <mt32emu/mt32emu.h>
 
 // An LA Synth Model consists of PCM and Control ROMs either in full or partial

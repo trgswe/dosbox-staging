@@ -33,11 +33,17 @@
 #include <vector>
 
 #define MT32EMU_API_TYPE 3
+#define MT32EMU_EXPORTS_TYPE 1
 #include <mt32emu/mt32emu.h>
 
 #include "mixer.h"
 #include "rwqueue.h"
 #include "soft_limiter.h"
+
+#define MT32EMU_VERSION "2.5.0"
+#define MT32EMU_VERSION_MAJOR 2
+#define MT32EMU_VERSION_MINOR 5
+#define MT32EMU_VERSION_PATCH 0
 
 static_assert(MT32EMU_VERSION_MAJOR > 2 ||
                       (MT32EMU_VERSION_MAJOR == 2 && MT32EMU_VERSION_MINOR >= 5),
